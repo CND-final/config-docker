@@ -6,16 +6,16 @@ This document covers running config-man as a fully containerized stack using Doc
 
 ## Two Operating Modes
 
-| | Local dev (`make dev`) | Docker stack (`make docker-up`) |
+| | Local dev (`make dev`) | Docker stack (`make up-build`) |
 |---|---|---|
 | **Backend** | `go run ./cmd` on host | Alpine container |
 | **Frontend** | Vite dev server (HMR) | nginx serving `dist/` |
 | **PostgreSQL** | Docker container | Docker container |
-| **Config file** | `backend/.env` | root `.env` |
+| **Config file** | `base/config-man/backend/.env` | `config/*.env` |
 | **DATABASE_URL host** | `localhost` | `postgres` (service name) |
 | **Frontend port** | 5173 | 80 |
 | **Hot reload** | Yes (backend + frontend) | No (rebuild required) |
-| **Started from** | `backend/` directory | project root |
+| **Started from** | `base/config-man/` directory | project root |
 
 Use **local dev** when actively writing code. Use **Docker stack** to verify the full deployment chain or to hand off to teammates who don't have Go/Node installed.
 
@@ -25,9 +25,9 @@ Use **local dev** when actively writing code. Use **Docker stack** to verify the
 
 ## Quick Start
 
-```bash
-# From the project root
-make docker-up
+```cmd
+:: From the project root
+make up-build
 ```
 
 Wait for all three services to become healthy (30–60 seconds on first run — images are built from source).
@@ -46,18 +46,37 @@ Demo accounts (all use password `password`):
 
 ---
 
+## Roles
+
+| Role | Scope |
+|------|-------|
+| `admin` | System-wide — full control over all resources and users |
+| `group-admin` | Group-scoped — full control within their own group(s) |
+| `user` | Standard user — access determined by group membership |
+
+### group-admin
+
+- All `admin` permissions, **scoped to their own group(s)**
+- Cannot affect groups they don't admin
+- Can promote `user` to `admin` within their group
+- Reports to system-wide `admin` for cross-group decisions
+
+---
+
 ## Environment Variables
 
-The root `.env` file is read automatically by `docker-compose.yml`.
-`.env` is listed in `.gitignore`, so you must create it before the first run:
+Each service reads its vars from a dedicated file in `config/`.
+These files are git-ignored; create them before the first run:
 
-```bash
-cp .env.example .env
+```cmd
+copy config\postgres.env.example config\postgres.env
+copy config\backend.env.example  config\backend.env
+copy config\frontend.env.example config\frontend.env
 ```
 
-The defaults in `.env.example` work out of the box for local development.
-All variables also have inline defaults in `docker-compose.yml`, so the stack
-starts even without a `.env` file — but having the file makes values explicit and editable.
+The defaults in the `.env.example` files work out of the box for local development.
+All variables also have inline fallbacks in `docker-compose-build.yaml`, so the stack
+starts even without the `config/*.env` files — but having them makes values explicit and editable.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -75,19 +94,19 @@ starts even without a `.env` file — but having the file makes values explicit 
 
 ## Starting and Stopping
 
-```bash
-# Build images from source and start all services
-make docker-up
+```cmd
+:: Build images from source and start all services
+make up-build
 
-# Stop all services (data volume is preserved)
-make docker-down
+:: Stop all services (data volume is preserved)
+make down
 
-# Stop and delete data volumes (full reset — all data is lost)
-docker compose down -v
+:: Stop and delete data volumes (full reset — all data is lost)
+docker compose -f docker-compose-build.yaml down -v
 
-# Rebuild and restart one service after a code change
-docker compose up -d --build backend
-docker compose up -d --build frontend
+:: Rebuild and restart one service after a code change
+docker compose -f docker-compose-build.yaml up -d --build backend
+docker compose -f docker-compose-build.yaml up -d --build frontend
 ```
 
 ---
@@ -108,9 +127,9 @@ docker compose logs -f postgres
 
 ## Cleaning Up
 
-```bash
-# Remove containers and network; keep data volume
-make docker-down
+```cmd
+:: Remove containers and network; keep data volume
+make down
 
 # Remove containers, network, and data volume
 docker compose down -v
@@ -125,64 +144,6 @@ docker system prune -f
 
 ---
 
-## Troubleshooting
-
-### Backend fails to connect: "connection refused" or "dial tcp"
-
-**Cause**: `DATABASE_URL` still contains `localhost` instead of the `postgres` service name.
-
-Inside a Docker container, `localhost` refers to the container itself — not to other containers. The correct hostname is the Docker Compose service name: `postgres`.
-
-**Verify**:
-```bash
-docker compose config | grep DATABASE_URL
-# Expected: postgres://...@postgres:5432/...
-# Wrong:    postgres://...@localhost:5432/...
-```
-
-**Fix**: Edit root `.env` and ensure `DATABASE_URL` uses `@postgres:5432`.
-
----
-
-### Port 5432 already in use
-
-**Cause**: `make dev` left a PostgreSQL container running (from `backend/docker-compose.yml`).
-
-**Fix**: Stop it before running the full stack.
-```bash
-cd backend && make db-down
-# then retry:
-cd .. && make docker-up
-```
-
----
-
-### Frontend shows "502 Bad Gateway" on API calls
-
-**Cause**: nginx cannot reach `http://backend:3000`. The backend container is either not running or its health check is still failing.
-
-**Diagnose**:
-```bash
-docker compose ps                # check all services show "healthy"
-docker compose logs backend      # look for startup errors or panics
-```
-
----
-
-### Images are stale after code changes
-
-`make docker-up` always passes `--build`, which rebuilds from source. If you used `docker compose up -d` directly (without `--build`), cached images are reused.
-
-Always use `make docker-up` when you have changed Go or frontend code.
-
----
-
-### `make docker-up` is very slow
-
-The first run builds both Go and Node images from scratch — expect 2–5 minutes. Subsequent runs reuse cached layers and are much faster unless `go.mod`, `go.sum`, or `package-lock.json` changed.
-
----
-
 ## Future: Enabling HTTPS
 
 When HTTPS is needed, choose one of the following approaches.
@@ -194,7 +155,7 @@ Best for: single-VM deployments where you manage certificates yourself.
 Steps:
 1. Obtain certificate files (`fullchain.pem`, `privkey.pem`) — e.g., via `certbot --standalone`.
 2. Place them in `./certs/` at the project root.
-3. In `docker-compose.yml`, uncomment:
+3. In `docker-compose-build.yaml`, uncomment:
    ```yaml
    ports:
      - "443:443"
@@ -210,18 +171,18 @@ Steps:
    }
    ```
    The `proxy_set_header X-Forwarded-Proto $scheme` header (already present) ensures the backend knows the original request was HTTPS.
-5. Rebuild: `make docker-up`.
+5. Rebuild: `make up-build`.
 
 ### Option 2: Add a reverse proxy container (Caddy or Traefik)
 
 Best for: automated certificate management with Let's Encrypt.
 
-Add a fourth service to `docker-compose.yml`:
+Add a fourth service to `docker-compose-build.yaml`:
 
 - **Caddy**: Automatically obtains and renews Let's Encrypt certificates with minimal configuration. The `frontend` service stays on port 80 (internal only, not exposed to host). Caddy terminates TLS and forwards traffic to nginx.
 - **Traefik**: Label-based routing; integrates well with Docker. Similar setup to Caddy.
 
-With this approach, `frontend/nginx.conf` and `docker-compose.yml` require no HTTPS changes — TLS is handled entirely by the proxy container.
+With this approach, `frontend/nginx.conf` and `docker-compose-build.yaml` require no HTTPS changes — TLS is handled entirely by the proxy container.
 
 ### Option 3: Terminate TLS at the cloud or infrastructure layer
 
@@ -229,7 +190,7 @@ Best for: cloud VM or Kubernetes deployments.
 
 - Use a cloud load balancer (AWS ALB, GCP HTTPS LB, Azure Application Gateway) to terminate TLS.
 - The Docker Compose stack runs entirely on HTTP internally.
-- No changes to `nginx.conf` or `docker-compose.yml` are needed.
+- No changes to `nginx.conf` or `docker-compose-build.yaml` are needed.
 - The `X-Forwarded-Proto: https` header is set by the load balancer; the backend's existing `X-Forwarded-Proto` handling will work correctly.
 
 This is the recommended approach for production cloud deployments.
