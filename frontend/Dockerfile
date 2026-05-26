@@ -5,10 +5,10 @@ WORKDIR /build
 
 # Copy manifests first for layer caching.
 # npm ci only re-runs when package-lock.json changes.
-COPY base/config-man/package.json base/config-man/package-lock.json ./
+COPY base/config-man/frontend/package.json base/config-man/frontend/package-lock.json ./
 RUN npm ci
 
-COPY base/config-man/ .
+COPY base/config-man/frontend/ .
 RUN npm run build
 
 # ── Stage 2: Serve ───────────────────────────────────────────────────────────
