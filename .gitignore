@@ -1,0 +1,11 @@
+base/*
+!base/.gitkeep
+.env
+**/.env
+!.env.example
+!**/.env.example
+docker-compose.override.yaml
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
