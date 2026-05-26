@@ -5,10 +5,10 @@ WORKDIR /build
 
 # Copy dependency manifests first for layer caching.
 # go mod download only re-runs when go.mod/go.sum change.
-COPY go.mod go.sum ./
+COPY base/config-man/go.mod base/config-man/go.sum ./
 RUN go mod download
 
-COPY . .
+COPY base/config-man/ .
 
 # CGO_ENABLED=0 produces a fully static binary (no glibc dependency).
 # pgx/v5/stdlib is pure Go, so CGO is not required.
