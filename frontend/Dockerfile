@@ -5,17 +5,17 @@ WORKDIR /build
 
 # Copy manifests first for layer caching.
 # npm ci only re-runs when package-lock.json changes.
-COPY package.json package-lock.json ./
+COPY base/config-man/package.json base/config-man/package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY base/config-man/ .
 RUN npm run build
 
 # ── Stage 2: Serve ───────────────────────────────────────────────────────────
 FROM nginx:alpine
 
 COPY --from=builder /build/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
