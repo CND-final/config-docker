@@ -25,10 +25,6 @@ Clones config-man, builds images locally, and starts all services.
 git clone https://github.com/CND-final/config-docker.git
 cd config-docker
 
-copy config\postgres.env.example config\postgres.env
-copy config\backend.env.example  config\backend.env
-copy config\frontend.env.example config\frontend.env
-
 make up-build
 ```
 
@@ -41,13 +37,11 @@ Open **http://localhost** in your browser.
 > Use Option A until CI is configured to push to `ghcr.io/cnd-final/`.
 
 ```cmd
-copy config\postgres.env.example config\postgres.env
-copy config\backend.env.example  config\backend.env
-copy config\frontend.env.example config\frontend.env
-
 make pull
 make up
 ```
+
+'make up' automatically initializes 'config/*.env' from the examples on first run.
 
 ---
 
@@ -71,7 +65,6 @@ config-docker/
 │   ├── .dockerignore
 │   ├── Dockerfile
 │   └── nginx.conf
-├── .env.example              ← quick-start index (copy instructions)
 ├── .gitignore
 ├── docker-compose-build.yaml ← build images from source
 ├── docker-compose.yaml       ← pull images from registry (needs CI first)

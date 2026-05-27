@@ -34,7 +34,7 @@ services:
       - config-man-net
 
   backend:
-    image: ghcr.io/cnd-final/config-man-backend:latest
+    image: ${REGISTRY:-ghcr.io}/${NAMESPACE:-cnd-final}/config-man-backend:${TAG:-latest}
     container_name: config-man-backend
     env_file: config/backend.env
     environment:
@@ -56,7 +56,7 @@ services:
       - config-man-net
 
   frontend:
-    image: ghcr.io/cnd-final/config-man-frontend:latest
+    image: ${REGISTRY:-ghcr.io}/${NAMESPACE:-cnd-final}/config-man-frontend:${TAG:-latest}
     container_name: config-man-frontend
     env_file: config/frontend.env
     ports:
