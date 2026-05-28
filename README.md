@@ -33,8 +33,7 @@ Open **http://localhost** in your browser.
 
 ### Option B — Pull from registry *(requires CI push first)*
 
-> ⚠ Images are not yet published to the registry.
-> Use Option A until CI is configured to push to `ghcr.io/cnd-final/`.
+> Images are published to `ghcr.io/cnd-final/`. No build required.
 
 ```cmd
 make pull
