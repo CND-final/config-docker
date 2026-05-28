@@ -40,6 +40,7 @@ Demo accounts (all use password `password`):
 |-------|------|
 | `admin@config-man.local` | System Admin |
 | `project-admin@config-man.local` | Project Admin |
+| `group-admin@config-man.local` | Group Admin |
 | `developer@config-man.local` | Developer |
 | `reviewer@config-man.local` | Reviewer |
 | `viewer@config-man.local` | Viewer |

@@ -31,7 +31,7 @@ make up-build
 Wait for all three services to become healthy (30–60 s on first run).
 Open **http://localhost** in your browser.
 
-### Option B — Pull from registry *(requires CI push first)*
+### Option B — Pull from registry
 
 > Images are published to `ghcr.io/cnd-final/`. No build required.
 
@@ -41,6 +41,18 @@ make up
 ```
 
 'make up' automatically initializes 'config/*.env' from the examples on first run.
+Open **http://localhost** in your browser.
+
+**Demo accounts (password: `password`):**
+
+| Email | Role |
+|-------|------|
+| `admin@config-man.local` | System Admin |
+| `project-admin@config-man.local` | Project Admin |
+| `group-admin@config-man.local` | Group Admin |
+| `developer@config-man.local` | Developer |
+| `reviewer@config-man.local` | Reviewer |
+| `viewer@config-man.local` | Viewer |
 
 ---
 
@@ -66,14 +78,14 @@ config-docker/
 │   └── nginx.conf
 ├── .gitignore
 ├── docker-compose-build.yaml ← build images from source
-├── docker-compose.yaml       ← pull images from registry (needs CI first)
+├── docker-compose.yaml       ← pull images from registry
 ├── Makefile
 └── README.md
 ```
 
 ---
 
-## Customising the Source Repo
+## Customizing the Source Repo
 
 `make fetch-sources` defaults to cloning `https://github.com/CND-final/config-man.git`
 on branch `main`. Override without editing the Makefile:
