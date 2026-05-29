@@ -25,11 +25,15 @@ Clones config-man, builds images locally, and starts all services.
 git clone https://github.com/CND-final/config-docker.git
 cd config-docker
 
+:: generate a local self-signed cert (or provide your own trusted certs)
+mkdir certs
+openssl req -x509 -nodes -newkey rsa:2048 -keyout certs/privkey.pem -out certs/fullchain.pem -days 365 -subj "/CN=localhost"
+
 make up-build
 ```
 
-Wait for all three services to become healthy (30–60 s on first run).
-Open **http://localhost** in your browser.
+Wait for all services to start (30–60 s on first run).
+Open **https://localhost** in your browser.
 
 ### Option B — Pull from registry
 
@@ -41,7 +45,7 @@ make up
 ```
 
 'make up' automatically initializes 'config/*.env' from the examples on first run.
-Open **http://localhost** in your browser.
+Open **https://localhost** in your browser.
 
 **Demo accounts (password: `password`):**
 
@@ -66,6 +70,7 @@ config-docker/
 ├── backend/
 │   ├── .dockerignore
 │   └── Dockerfile
+├── certs/                 ← TLS certs (fullchain.pem, privkey.pem)
 ├── config/
 │   ├── backend.env.example
 │   ├── frontend.env.example
@@ -76,6 +81,8 @@ config-docker/
 │   ├── .dockerignore
 │   ├── Dockerfile
 │   └── nginx.conf
+├── proxy/
+│   └── nginx.conf           ← TLS-terminating reverse proxy
 ├── .gitignore
 ├── docker-compose-build.yaml ← build images from source
 ├── docker-compose.yaml       ← pull images from registry
