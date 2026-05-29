@@ -5,6 +5,9 @@
 REGISTRY  ?= ghcr.io
 NAMESPACE ?= cnd-final
 TAG       ?= latest
+MKCERT_IMAGE ?= alpine:3.20
+MKCERT_URL   ?= https://dl.filippo.io/mkcert/latest?for=
+MKCERT_DIR   ?= certs/mkcert
 
 BACKEND_IMAGE  = $(REGISTRY)/$(NAMESPACE)/config-man-backend:$(TAG)
 FRONTEND_IMAGE = $(REGISTRY)/$(NAMESPACE)/config-man-frontend:$(TAG)
@@ -14,7 +17,7 @@ SOURCE_REPO   ?= https://github.com/CND-final/config-man.git
 SOURCE_BRANCH ?= main
 SOURCE_DIR    := base/config-man
 
-.PHONY: help fetch-sources clean-sources build push pull up up-build down logs init-config
+.PHONY: help fetch-sources clean-sources build push pull certs up up-build down logs init-config
 
 help:
 	@echo "Usage: make <target>"
@@ -23,6 +26,7 @@ help:
 	@echo "  build           build backend + frontend images tagged for GHCR"
 	@echo "  push            push both images to $(REGISTRY)/$(NAMESPACE)"
 	@echo "  pull            pull images from registry (docker-compose.yaml)"
+	@echo "  certs           generate local TLS certs with mkcert (containerized)"
 	@echo "  up              start all services from registry images"
 	@echo "  up-build        build from source and start all services (local dev)"
 	@echo "  down            stop all services"
@@ -60,6 +64,22 @@ init-config:
 	    echo "Created config/$$f.env from example"; \
 	  fi; \
 	done
+
+certs:
+	@mkdir -p certs $(MKCERT_DIR)
+	@docker run --rm \
+	  -v "$(CURDIR)/certs:/certs" \
+	  -v "$(CURDIR)/$(MKCERT_DIR):/root/.local/share/mkcert" \
+	  $(MKCERT_IMAGE) \
+	  /bin/sh -c 'set -e; apk add --no-cache curl ca-certificates >/dev/null; arch="$$(uname -m)"; \
+	    case "$$arch" in \
+	      x86_64) platform="linux/amd64" ;; \
+	      aarch64) platform="linux/arm64" ;; \
+	      *) echo "Unsupported arch: $$arch" >&2; exit 1 ;; \
+	    esac; \
+	    curl -fsSL "$(MKCERT_URL)$${platform}" -o /usr/local/bin/mkcert; \
+	    chmod +x /usr/local/bin/mkcert; \
+	    /usr/local/bin/mkcert -cert-file /certs/fullchain.pem -key-file /certs/privkey.pem localhost 127.0.0.1 ::1'
 
 up: init-config
 	docker compose up -d

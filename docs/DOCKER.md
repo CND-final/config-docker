@@ -151,8 +151,9 @@ docker system prune -f
 
 TLS is terminated at the `proxy` service. The frontend and backend stay on plain HTTP behind it.
 
-1. Provide certificates at `./certs/fullchain.pem` and `./certs/privkey.pem`.
-2. Start the stack: `make up-build` or `make up`.
-3. Access the app at `https://localhost` (or your domain).
+1. Generate local certs: `make certs` (writes to `./certs/`).
+2. Trust the mkcert CA at `certs/mkcert/rootCA.pem` if you want to avoid browser warnings.
+3. Start the stack: `make up-build` or `make up`.
+4. Access the app at `https://localhost` (or your domain).
 
 The proxy routes `/api` directly to the backend and all other paths to the frontend, keeping same-origin HTTPS for the browser.

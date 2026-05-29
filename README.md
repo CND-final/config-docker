@@ -25,15 +25,15 @@ Clones config-man, builds images locally, and starts all services.
 git clone https://github.com/CND-final/config-docker.git
 cd config-docker
 
-:: generate a local self-signed cert (or provide your own trusted certs)
-mkdir certs
-openssl req -x509 -nodes -newkey rsa:2048 -keyout certs/privkey.pem -out certs/fullchain.pem -days 365 -subj "/CN=localhost"
+:: generate local TLS certs (mkcert in a container)
+make certs
 
 make up-build
 ```
 
 Wait for all services to start (30–60 s on first run).
 Open **https://localhost** in your browser.
+To avoid browser warnings, trust the mkcert CA at `certs/mkcert/rootCA.pem`.
 
 ### Option B — Pull from registry
 
@@ -41,6 +41,7 @@ Open **https://localhost** in your browser.
 
 ```cmd
 make pull
+make certs
 make up
 ```
 

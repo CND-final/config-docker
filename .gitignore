@@ -9,4 +9,4 @@ docker-compose.override.yaml
 Thumbs.db
 .vscode/
 .idea/
-certs/*
+certs/
