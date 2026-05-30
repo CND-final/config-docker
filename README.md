@@ -15,9 +15,29 @@
 
 ---
 
+## Deployment guides
+
+- **Local Docker stack** → [docs/DOCKER.md](docs/DOCKER.md)
+- **Cloud (Render, HTTPS)** → [docs/RENDER.md](docs/RENDER.md)
+
+---
+
 ## Quick Start
 
-### Option A — Build from source *(recommended)*
+### Option A — Live cloud deployment *(recommended — real HTTPS)*
+
+Already deployed on Render with a real, trusted HTTPS certificate (green lock) —
+no setup required:
+
+- **App:** https://config-man-frontend.onrender.com
+- Log in with any demo account (see below).
+- ⚠️ The free backend sleeps after ~15 min idle. **Before a demo, wake it** by
+  opening https://config-man-backend.onrender.com/api/v1/health once
+  (first request takes 30–60 s).
+
+Full deployment steps (how it was built / how to rebuild) → [docs/RENDER.md](docs/RENDER.md).
+
+### Option B — Build from source (local)
 
 Clones config-man, builds images locally, and starts all services.
 
@@ -35,7 +55,7 @@ Wait for all services to start (30–60 s on first run).
 Open **https://localhost** in your browser.
 To avoid browser warnings, trust the mkcert CA at `certs/mkcert/rootCA.pem`.
 
-### Option B — Pull from registry
+### Option C — Pull from registry (local)
 
 > Images are published to `ghcr.io/cnd-final/`. No build required.
 
@@ -59,6 +79,11 @@ Open **https://localhost** in your browser.
 | `reviewer@config-man.local` | Reviewer |
 | `viewer@config-man.local` | Viewer |
 
+> **Note on HTTPS:** `https://localhost` here uses a self-signed cert, so
+> browsers will show a security warning. For a publicly accessible deployment
+> with a real, trusted HTTPS certificate (green lock), see
+> [docs/RENDER.md](docs/RENDER.md).
+
 ---
 
 ## Directory Layout
@@ -77,7 +102,8 @@ config-docker/
 │   ├── frontend.env.example
 │   └── postgres.env.example
 ├── docs/
-│   └── DOCKER.md             ← full variable reference and HTTPS guide
+│   ├── DOCKER.md             ← local Docker stack + local HTTPS
+│   └── RENDER.md             ← cloud deployment (Render, real HTTPS)
 ├── frontend/
 │   ├── .dockerignore
 │   ├── Dockerfile
