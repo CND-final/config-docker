@@ -200,7 +200,9 @@ Open `https://config-man-frontend.onrender.com`:
 - **Postgres lifespan.** Free Postgres is deleted after 30 days. Don't
   provision it far ahead of the demo.
 - **No auto-deploy for image-based backend.** Push to GHCR, then manually
-  deploy in Render.
+  deploy in Render — or set up the automated pipeline (see
+  [`CD.md`](./CD.md)) so backend changes on `main` build and redeploy
+  themselves.
 - **Frontend auto-deploys** on push to the connected branch. Confirm the latest
   deploy matches the intended commit before demoing.
 
@@ -213,3 +215,9 @@ Open `https://config-man-frontend.onrender.com`:
 | Frontend | `https://config-man-frontend.onrender.com` |
 | Backend | `https://config-man-backend.onrender.com` |
 | Backend health | `https://config-man-backend.onrender.com/api/v1/health` |
+
+---
+
+> **Automating redeploys.** These steps are the manual path. To rebuild and
+> redeploy the backend automatically whenever code lands on `config-man`'s
+> `main`, see [`CD.md`](./CD.md).
